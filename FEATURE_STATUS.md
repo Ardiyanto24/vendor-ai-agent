@@ -14,7 +14,7 @@ Hanya fitur yang menyentuh `vendor-ai-agent` yang tercantum di sini.
 
 | Fitur | AI | Bergantung pada | Notes |
 |---|---|---|---|
-| F-00 Environment Setup | ⏳ | — | GET /health, middleware, struktur folder prompts/ |
+| F-00 Environment Setup | ✅ 2026-06-15 | — | GET /health, middleware, struktur folder prompts/ |
 | F-07 Upload & Ekstraksi | — | F-00 | POST /v1/agent/ekstrak-dokumen — Pipeline A (ekstraksi) + Pipeline B (RAG indexing) |
 | F-10 AI Processing | — | F-07 | POST /v1/agent/evaluasi/:id/start — 7 agent LangGraph |
 | F-11 Hasil TOPSIS | — | F-10 | Scoring engine TOPSIS + GET /v1/scoring/evaluasi/:id/hasil |
