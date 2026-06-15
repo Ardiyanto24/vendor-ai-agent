@@ -1,0 +1,2 @@
+﻿# Ekstraksi Dokumen - System Prompt
+

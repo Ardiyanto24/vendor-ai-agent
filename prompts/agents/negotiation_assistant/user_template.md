@@ -1,0 +1,2 @@
+﻿# Negotiation Assistant - User Template
+

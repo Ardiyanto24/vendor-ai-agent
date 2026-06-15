@@ -1,0 +1,2 @@
+﻿# Qualitative Analyzer - User Template
+

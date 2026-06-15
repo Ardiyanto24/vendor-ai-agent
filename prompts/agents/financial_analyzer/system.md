@@ -1,0 +1,2 @@
+﻿# Financial Analyzer - System Prompt
+
