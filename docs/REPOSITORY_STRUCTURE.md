@@ -2,8 +2,8 @@
 
 **Project:** AI Vendor Selection System  
 **Dokumen:** Repository Structure  
-**Versi:** 2.0.0  
-**Tanggal:** 2026-06-12  
+**Versi:** 4.0.0  
+**Tanggal:** 2026-06-16  
 **Referensi:** ADR-031, ADR-032, FE-01 v2.0.0, SH-02 v3.0.0
 
 ---
@@ -130,7 +130,25 @@ Repository Python untuk FastAPI service. Berisi semua kecerdasan sistem: AI agen
 ```
 vendor-ai-agent/
 │
+├── main.py                           ← FastAPI app entry point: inisialisasi app, daftarkan semua router,
+│                                       pasang middleware, konfigurasi CORS, GET /health
+│
+├── middleware/
+│   └── service_token.py              ← Middleware cek header X-Service-Token di semua endpoint
+│                                       kecuali /health dan /v1/chat/stream
+│
+├── routers/                          ← FastAPI route handlers (dipanggil dari main.py)
+│   └── v1/                           ← Versioning — semua endpoint aktif ada di sini; endpoint lama
+│       │                                tidak perlu dihapus saat ada breaking change, cukup tambah v2/
+│       ├── agent.py                  ← POST /v1/agent/ekstrak-dokumen   (F-07)
+│       │                                POST /v1/agent/evaluasi/:id/start (F-10)
+│       ├── scoring.py                ← GET  /v1/scoring/evaluasi/:id/hasil (F-11)
+│       ├── rag.py                    ← POST /v1/rag/query               (F-14, endpoint internal)
+│       └── chat.py                   ← POST /v1/chat/stream             (F-14, diakses langsung dari browser)
+│
 ├── agents/                           ← Implementasi 7 sub-agent (LangGraph nodes)
+│   ├── orchestrator.py               ← LangGraph graph definition, dependency pipeline, inisialisasi progress
+│   ├── base.py                       ← Base class agent: load prompt, call LLM, retry, update progress
 │   ├── data_collector/               ← DC: web search via Tavily, profil publik vendor
 │   ├── financial_analyzer/           ← FA: analisis harga, TCO, kewajaran penawaran
 │   ├── risk_assessor/                ← RA: risiko legalitas dan stabilitas bisnis
@@ -139,14 +157,17 @@ vendor-ai-agent/
 │   ├── qualitative_analyzer/         ← QA: nilai tambah unik, tie-breaker kualitatif
 │   └── preference_matcher/           ← PM: pencocokan preferensi bisnis perusahaan
 │
-├── scoring/                          ← TOPSIS scoring engine
-│                                     ← Normalisasi, pembobotan, ideal solution, ranking
+├── scoring/                          ← TOPSIS scoring engine (kode Python murni, tanpa LLM)
+│   ├── topsis.py                     ← 6 tahap TOPSIS: normalisasi, pembobotan, ideal solution, ranking
+│   ├── threshold.py                  ← Pengecekan threshold minimum per kriteria
+│   └── reasoning.py                  ← Reasoning naratif via LLM setelah skor terbentuk
 │
 ├── rag/                              ← RAG pipeline
-│   ├── indexing/                     ← Ekstraksi teks, chunking, embedding, simpan ke pgvector
-│   └── retrieval/                    ← Hybrid search (vector + BM25), RRF reranking
+│   ├── indexing/                     ← Ekstraksi teks (pdfplumber/openpyxl), chunking hierarkis,
+│   │                                    embedding via Google Gemini, bulk insert ke pgvector
+│   └── retrieval/                    ← Hybrid search (vector similarity + full-text BM25), RRF reranking
 │
-├── prompts/                          ← Semua prompt LLM disimpan sebagai file .md
+├── prompts/                          ← Semua prompt LLM disimpan sebagai file .md (tidak ada hardcode di Python)
 │   ├── agents/
 │   │   ├── data_collector/           ← system.md, user_template.md
 │   │   ├── financial_analyzer/       ← system.md, user_template.md
@@ -155,13 +176,14 @@ vendor-ai-agent/
 │   │   ├── negotiation_assistant/    ← system.md, user_template.md
 │   │   ├── qualitative_analyzer/     ← system.md, user_template.md
 │   │   └── preference_matcher/       ← system.md, user_template_neutral.md, user_template_opinionated.md
-│   ├── chat_panel/                   ← base_system.md, context_*.md per halaman
+│   ├── chat_panel/                   ← base_system.md, context_dashboard.md, context_processing.md,
+│   │                                    context_hasil.md, context_buat_evaluasi.md, context_approval.md
 │   ├── ekstraksi_dokumen/            ← system.md, user_template.md
 │   └── rag/                          ← query_expansion.md
 │
 ├── tests/                            ← Test suite FastAPI
 │   ├── agents/                       ← Unit test per agent dengan LLM mock
-│   ├── scoring/                      ← Unit test TOPSIS (6 tahap terverifikasi)
+│   ├── scoring/                      ← Unit test TOPSIS (6 tahap terverifikasi manual)
 │   ├── rag/                          ← Test indexing dan retrieval
 │   └── integration/                  ← End-to-end pipeline test
 │
@@ -207,3 +229,5 @@ vendor-ai-agent/
 | 1.0.0 | 2026-06-07 | Versi awal | — |
 | 2.0.0 | 2026-06-12 | Adopsi ADR-032 (empat role): perbarui tabel kepemilikan | — |
 | 3.0.0 | 2026-06-13 | Adopsi ADR-035 (namespace AI) dan ADR-036 (2 track solo developer): perbarui daftar file docs/ (BE-03→AI-01 s/d AI-07, BE-06→BE-03, BE-07 dipecah menjadi BE-04 dan AI-04, total 30 dokumen); perbarui tabel kepemilikan (4 role → Fullstack + AI Engineer); perbarui CODEOWNERS; perbarui kalimat penutup | — |
+| 4.0.0 | 2026-06-16 | Lengkapi struktur vendor-ai-agent: tambahkan main.py, middleware/, routers/ (agent.py, scoring.py, rag.py, chat.py), orchestrator.py, base.py di agents/, threshold.py dan reasoning.py di scoring/, rincian file prompt chat_panel/ | — |
+
