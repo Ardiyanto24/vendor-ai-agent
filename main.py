@@ -6,6 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import httpx
 
+from routers.v1.agent import router as agent_router
+
 # Load environment variables
 load_dotenv()
 
@@ -40,6 +42,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(agent_router)
 
 # Initialize Supabase client
 supabase_client = None
